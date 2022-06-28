@@ -51,6 +51,7 @@ class Database:
                     id SERIAL,
                     todo_text TEXT NOT NULL,
                     todo_once BOOL NOT NULL,
+                    status BOOL NOT NULL,
                     user_id BIGINT UNSIGNED NOT NULL,
                     
                     PRIMARY KEY (id),
@@ -61,6 +62,19 @@ class Database:
 
         for sql in querys:
             self.execute(sql, commit=True)
+
+    def add_user(self, user_id: int, fullname: str, username: str | None = None):
+        sql = """
+        INSERT INTO `User` (id, full_name, username) VALUES (%s, %s, %s);
+        """
+        self.execute(sql, user_id, fullname, username, commit=True)
+
+    def add_task(self, text: str, user_id: int, once: bool = True, status: bool = False):
+        sql = """
+        INSERT INTO `Todo` (todo_text, todo_once, status, user_id)
+        VALUES (%s, %s, %s, %s);
+        """
+        self.execute(sql, text, once, status,  user_id, commit=True)
 
     def get_task(self, fetch: bool = False, fetchall: bool = False, **kwargs):
         sql = """
@@ -80,4 +94,4 @@ class Database:
             sql += where
             params = (user_id,)
 
-        self.execute(sql, *params, fetch=fetch, fetchall=fetchall)
+        return self.execute(sql, *params, fetch=fetch, fetchall=fetchall)
