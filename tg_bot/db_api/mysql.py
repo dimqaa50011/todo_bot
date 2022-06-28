@@ -15,6 +15,7 @@ class Database:
                                user=self.config.user,
                                password=self.config.password,
                                database=self.config.database,
+                               port=self.config.port,
                                charset='utf8mb4',
                                cursorclass=DictCursor)
 
@@ -35,7 +36,7 @@ class Database:
 
         return data
 
-    def creaete_tables(self):
+    def create_tables(self):
         querys = (
             """
                 CREATE TABLE IF NOT EXISTS `User` (
@@ -69,7 +70,7 @@ class Database:
         """
         self.execute(sql, user_id, fullname, username, commit=True)
 
-    def add_task(self, text: str, user_id: int, once: bool = True, status: bool = False):
+    def add_task(self, text: str, user_id: int, once: bool, status: bool = False):
         sql = """
         INSERT INTO `Todo` (todo_text, todo_once, status, user_id)
         VALUES (%s, %s, %s, %s);
@@ -95,3 +96,10 @@ class Database:
             params = (user_id,)
 
         return self.execute(sql, *params, fetch=fetch, fetchall=fetchall)
+
+    def update_task(self, field: str, *params):
+
+        sql = f"""
+        UPDATE `Todo` SET {field} = %s WHERE id = %s;
+        """
+        self.execute(sql, *params, commit=True)

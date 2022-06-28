@@ -17,6 +17,7 @@ class DbConfig:
     password: str
     host: str
     database: str
+    port: int
 
 
 @dataclass
@@ -45,10 +46,12 @@ def load_settings(path: str = None):
             user=env.str('DB_USER'),
             password=env.str('DB_PASS'),
             host=env.str('DB_HOST'),
-            database=env.str('DB_NAME')
+            database=env.str('DB_NAME'),
+            port=env.int('DB_PORT')
         ),
         Misk()
     )
+
 
 def load_db_cnf(path: str = None):
     env = Env()
@@ -58,5 +61,6 @@ def load_db_cnf(path: str = None):
         user=env.str('DB_USER'),
         password=env.str('DB_PASS'),
         host=env.str('DB_HOST'),
-        database=env.str('DB_NAME')
+        database=env.str('DB_NAME'),
+        port=env.int('DB_PORT')
     )

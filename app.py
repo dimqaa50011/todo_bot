@@ -1,15 +1,15 @@
 import asyncio
 import logging
 
-from aiogram import Bot, Dispatcher
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.contrib.fsm_storage.redis import RedisStorage2
+from aiogram import Dispatcher
 
 from loader import LoaderCoreBot
+from tg_bot.db_api.mysql import Database
 from tg_bot.filters import AdminFilter
 from tg_bot.handlers import register_admin, register_echo, register_start
 from tg_bot.handlers.add_task import register_add_task_handler
-from tg_bot.settings import load_settings
+from tg_bot.handlers.tasks_control import register_control_tasks_handlers
+from tg_bot.misc.cancel_handler import register_cancel
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,8 @@ def register_handlers(dp):
     register_admin(dp)
     register_start(dp)
     register_add_task_handler(dp)
+    register_control_tasks_handlers(dp)
+    register_cancel(dp)
 
     register_echo(dp)
 
@@ -47,6 +49,9 @@ async def runner():
     )
 
     bot, dp, storage, settings = await LoaderCoreBot.load_core()
+
+    db = Database()
+    db.create_tables()
 
     register_middlewares(dp)
     register_filters(dp)
