@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from tg_bot.keyboards.inline import adding_task_calllback, tasks_list_callback, edit_callback, get_cancel
+from tg_bot.keyboards.inline import adding_task_callback, tasks_list_callback, edit_callback, get_cancel
 from tg_bot.misc.getters_data_db import get_my_task
 
 
@@ -9,9 +9,9 @@ async def get_type_task_keyboard():
 
     btns = (
         InlineKeyboardButton(text="Одноразовая",
-                             callback_data=adding_task_calllback.new(type_task="once", task="task")),
+                             callback_data=adding_task_callback.new(type_task="once", task="task")),
         InlineKeyboardButton(
-            text="Постоянная", callback_data=adding_task_calllback.new(type_task="const", task="task"))
+            text="Постоянная", callback_data=adding_task_callback.new(type_task="const", task="task"))
     )
 
     for btn in btns:
@@ -23,7 +23,7 @@ async def get_type_task_keyboard():
 async def get_tasks_markup(user_id: int):
     markup = InlineKeyboardMarkup()
 
-    data = await get_my_task(fetchall=True, user_id=user_id)
+    data = await get_my_task(fetchall=True, user_id=user_id, status=False)
     for item in data:
         markup.insert(InlineKeyboardButton(text=item.get("todo_text"),
                                            callback_data=tasks_list_callback.new(task_id=item.get("id"),

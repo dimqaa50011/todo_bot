@@ -15,3 +15,12 @@ services:
     restart: always
     volumes:
       - ./mysqlData:/var/lib/mysql
+
+  scheduler:
+    container_name: "schedulerDB"
+    image: mongo:5.0
+    ports:
+      - "27020:27017"
+    restart: always
+    volumes:
+      - ./apschedulerDB:/etc/mongo

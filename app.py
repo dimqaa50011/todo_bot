@@ -9,14 +9,14 @@ from tg_bot.filters import AdminFilter
 from tg_bot.handlers import register_admin, register_echo, register_start
 from tg_bot.handlers.add_task import register_add_task_handler
 from tg_bot.handlers.tasks_control import register_control_tasks_handlers
+from tg_bot.middlewares.scheduler import Scheduler
 from tg_bot.misc.cancel_handler import register_cancel
 
 logger = logging.getLogger(__name__)
 
 
-def register_middlewares(dp):
-    # dp.setup_middleware()
-    pass
+def register_middlewares(dp, scheduler):
+    dp.setup_middleware(Scheduler(scheduler))
 
 
 def register_filters(dp):
@@ -48,12 +48,12 @@ async def runner():
         format=u'%(filename)s:%(lineno)d #%(levelname)-8s [%(asctime)s] - %(name)s - %(message)s'
     )
 
-    bot, dp, storage, settings = await LoaderCoreBot.load_core()
+    bot, dp, storage, settings, scheduler = await LoaderCoreBot.load_core()
 
     db = Database()
     db.create_tables()
 
-    register_middlewares(dp)
+    register_middlewares(dp, scheduler)
     register_filters(dp)
     register_handlers(dp)
 

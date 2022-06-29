@@ -1,6 +1,6 @@
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
-from tg_bot.keyboards.inline import cancel_keyboard, get_type_task_keyboard, adding_task_calllback
+from tg_bot.keyboards.inline import cancel_keyboard, get_type_task_keyboard, adding_task_callback
 from tg_bot.misc.insert_db import insert_task
 
 
@@ -37,5 +37,5 @@ async def add_task(message: types.Message, state: FSMContext):
 def register_add_task_handler(dp: Dispatcher):
     dp.register_message_handler(run_add_task, text="Добавить задачу")
     dp.register_callback_query_handler(
-        get_text_task, adding_task_calllback.filter(task="task"), state="run_add_task")
+        get_text_task, adding_task_callback.filter(task="task"), state="run_add_task")
     dp.register_message_handler(add_task, state="add_text")
