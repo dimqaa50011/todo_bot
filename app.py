@@ -8,6 +8,7 @@ from tg_bot.db_api.mysql import Database
 from tg_bot.filters import AdminFilter
 from tg_bot.handlers import register_admin, register_echo, register_start
 from tg_bot.handlers.add_task import register_add_task_handler
+from tg_bot.handlers.notify_handlers import register_notify
 from tg_bot.handlers.tasks_control import register_control_tasks_handlers
 from tg_bot.middlewares.scheduler import Scheduler
 from tg_bot.misc.cancel_handler import register_cancel
@@ -29,6 +30,7 @@ def register_handlers(dp):
     register_add_task_handler(dp)
     register_control_tasks_handlers(dp)
     register_cancel(dp)
+    register_notify(dp)
 
     register_echo(dp)
 
@@ -60,6 +62,7 @@ async def runner():
     await on_startup_notify(dp, settings.tg_bot.admins)
 
     try:
+        scheduler.start()
         await dp.start_polling()
     finally:
         await storage.close()

@@ -1,4 +1,3 @@
-
 import pymysql
 from pymysql.cursors import DictCursor
 from tg_bot.misc.formatters import format_todo
@@ -50,6 +49,7 @@ class Database:
             """
                 CREATE TABLE IF NOT EXISTS `Todo` (
                     id SERIAL,
+                    scheduler_id BLOB NOT NULL,
                     todo_text TEXT NOT NULL,
                     todo_once BOOL NOT NULL,
                     status BOOL NOT NULL,
@@ -70,12 +70,12 @@ class Database:
         """
         self.execute(sql, user_id, fullname, username, commit=True)
 
-    def add_task(self, text: str, user_id: int, once: bool, status: bool = False):
+    def add_task(self, text: str, scheduler_id: hex, user_id: int, once: bool, status: bool = False):
         sql = """
-        INSERT INTO `Todo` (todo_text, todo_once, status, user_id)
-        VALUES (%s, %s, %s, %s);
+        INSERT INTO `Todo` (scheduler_id, todo_text, todo_once, status, user_id)
+        VALUES (%s, %s, %s, %s, %s);
         """
-        self.execute(sql, text, once, status,  user_id, commit=True)
+        self.execute(sql, scheduler_id, text, once, status, user_id, commit=True)
 
     def get_task(self, fetch: bool = False, fetchall: bool = False, **kwargs):
         sql = """
