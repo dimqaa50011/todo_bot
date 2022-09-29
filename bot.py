@@ -5,8 +5,8 @@ from loguru import logger
 from core import bot_loader
 from tg_bot.filters import register_all_filters
 from tg_bot.handlers.register_all_handlers import start_register_all_handlers
-from tg_bot.misc.bot_commands import set_default_commands
 from tg_bot.misc.admin import notify_admins
+from tg_bot.misc.bot_commands import set_default_commands
 
 
 async def runner():
