@@ -1,6 +1,3 @@
-from datetime import datetime
-from typing import Optional
-
 from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.engine.cursor import CursorResult
@@ -9,6 +6,7 @@ from sqlalchemy.sql.schema import Table
 
 from core import bot_loader
 from db_api.models.users import Users
+from db_api.schemas.users_schemas import CreateUser
 
 from .base_crud import BaseCRUD
 
@@ -16,27 +14,11 @@ from .base_crud import BaseCRUD
 class UsersCRUD(BaseCRUD):
     _model: Table = Users.__table__
 
-    async def create_item(
-        self,
-        _id: int,
-        username: Optional[str] = None,
-        first_name: Optional[str] = None,
-        last_name: Optional[str] = None,
-        is_admin: bool = False,
-        deleted: bool = False,
-    ):
+    async def create_item(self, fields: CreateUser):
         query = self._model.insert()
-        values = {
-            "id": _id,
-            "username": username,
-            "first_name": first_name,
-            "last_name": last_name,
-            "joined_date": datetime.now(),
-            "is_admin": is_admin,
-            "deleted": deleted,
-        }
+
         try:
-            await self.executer(query=query, values=values)
+            await self.executer(query=query, values=fields.dict())
         except IntegrityError as ex:
             logger.info(ex)
 
