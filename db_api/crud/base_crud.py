@@ -29,7 +29,7 @@ class BaseCRUD(ABC):
     async def delete_item(self):
         pass
 
-    async def executer(self, query, values: Optional[dict]):
+    async def executer(self, query, values: Optional[dict] = None):
         async with async_session() as session:
             session: AsyncSession
             async with session.begin():

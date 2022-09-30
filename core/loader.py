@@ -19,7 +19,7 @@ class Loader:
     def get_fsm_storage(self):
         return RedisStorage2() if settings.bot_config.USE_REDIS else MemoryStorage()
 
-    def get_admins(self):
+    async def get_admins(self):
         return self.__admins
 
     async def get_all_attrs(self):
