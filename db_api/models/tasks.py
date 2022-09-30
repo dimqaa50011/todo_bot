@@ -9,6 +9,6 @@ class Tasks(Base):
     id = Column(Integer, primary_key=True)
     body = Column(Text, nullable=False)
     dedline = Column(DateTime)
-    compited = Column(Boolean, nullable=False, default=False)
+    complited = Column(Boolean, nullable=False, default=False)
     deleted = Column(Boolean, nullable=False, default=False)
     user_id = Column(Integer, ForeignKey("users.id"))
