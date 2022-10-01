@@ -17,10 +17,13 @@ async def add_new_task(message: Message, state: FSMContext):
 
 async def body_task(message: Message, state: FSMContext):
     markup = await get_notify_markup()
-    await crud.create_item(CreateTask(body=message.text, user_id=message.from_user.id))
+    task_id = await crud.create_item(CreateTask(body=message.text, user_id=message.from_user.id))
     await message.answer("Включить уведомления?", reply_markup=markup)
 
     await state.set_state("add_notify")
+
+    async with state.proxy() as data:
+        data["task_id"] = task_id
 
 
 def register_adding_tasks_handlers(dp: Dispatcher):
