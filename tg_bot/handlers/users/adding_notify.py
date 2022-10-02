@@ -3,9 +3,13 @@ from datetime import datetime
 from aiogram import Dispatcher
 from aiogram.dispatcher.storage import FSMContext
 from aiogram.types import CallbackQuery, Message
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.date import DateTrigger
 
+from core import bot_loader
 from db_api.crud.tasks_crud import TasksCRUD
 from tg_bot.keyboards.inline.callbackdatas import notify_callback
+from tg_bot.misc.scheduler import remind_you_of_a_task
 
 crud = TasksCRUD()
 
@@ -27,6 +31,15 @@ async def add_dedline(message: Message, state: FSMContext):
     data = await state.get_data()
     dedline = await dedline_format(message.text)
     await crud.update_item(_id=data.get("task_id"), update_dict={"dedline": dedline})
+
+    scheduler: AsyncIOScheduler = await bot_loader.get_scheduler()
+    scheduler.add_job(
+        remind_you_of_a_task,
+        DateTrigger(run_date=dedline, timezone="Europe/Moscow"),
+        id=str(data.get("task_id")),
+        args=(data.get("task_id"), message.from_user.id),
+    )
+
     await message.answer("Уведомления включены")
     await state.finish()
 

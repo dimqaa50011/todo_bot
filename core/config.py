@@ -35,6 +35,11 @@ class DBConfig(BaseEnvFile):
         )
 
 
+class SchedulerDB(BaseEnvFile):
+    SCHEDULER_HOST: str
+    SCHEDULER_PORT: int
+
+
 class BotConfig(BaseEnvFile):
     ADMINS: str
     BOT_TOKEN: str
@@ -43,6 +48,7 @@ class BotConfig(BaseEnvFile):
 
 class Settings(BaseEnvFile):
     db_conf: DBConfig = DBConfig()
+    scheduler_db: SchedulerDB = SchedulerDB()
     bot_config: BotConfig = BotConfig()
 
 
