@@ -17,4 +17,5 @@ services:
     container_name: scheduler_storage
     ports:
       - "27017:27017"
+    restart: always
     

@@ -11,3 +11,4 @@ class CreateUser(BaseModel):
     joined_date: datetime = Field(default=datetime.now())
     is_admin: bool = Field(default=False)
     deleted: bool = Field(default=False)
+    time_zone: str = Field(default=None)

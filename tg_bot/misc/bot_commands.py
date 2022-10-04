@@ -6,5 +6,6 @@ async def set_default_commands(dp):
         [
             types.BotCommand("start", "Запустить бота"),
             types.BotCommand("help", "Помощь"),
+            types.BotCommand("set_timezone", "Установить часовой пояс"),
         ]
     )

@@ -14,4 +14,5 @@ class Users(Base):
     joined_date = Column(DateTime, nullable=False)
     is_admin = Column(Boolean, nullable=False)
     deleted = Column(Boolean, nullable=False)
+    time_zone = Column(String(100))
     tasks = relationship("Tasks", backref="users")
