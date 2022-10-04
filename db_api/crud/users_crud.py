@@ -44,5 +44,6 @@ class UsersCRUD(BaseCRUD):
 
         return answer
 
-    async def update_item(self):
-        pass
+    async def update_item(self, user_id: int, update_dict: dict):
+        query = self._model.update().where(self._model.c.id == user_id)
+        await self.executer(query=query, values=update_dict)

@@ -11,3 +11,11 @@ services:
       - POSTGRES_PASSWORD=$DB_PASS
       - POSTGRES_USER=$DB_USER
       - POSTGRES_DB=$DB_NAME
+  
+  scheduler_db:
+    image: mongo:6.0
+    container_name: scheduler_storage
+    ports:
+      - "27017:27017"
+    restart: always
+    
