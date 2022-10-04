@@ -8,10 +8,12 @@ from apscheduler.triggers.date import DateTrigger
 
 from core import bot_loader
 from db_api.crud.tasks_crud import TasksCRUD
+from db_api.crud.users_crud import UsersCRUD
 from tg_bot.keyboards.inline.callbackdatas import notify_callback
 from tg_bot.misc.scheduler import remind_you_of_a_task
 
-crud = TasksCRUD()
+task_crud = TasksCRUD()
+user_crud = UsersCRUD()
 
 
 async def without_notice(call: CallbackQuery, state: FSMContext):
@@ -30,12 +32,13 @@ async def notification_adding_process(call: CallbackQuery, state: FSMContext):
 async def add_dedline(message: Message, state: FSMContext):
     data = await state.get_data()
     dedline = await dedline_format(message.text)
-    await crud.update_item(_id=data.get("task_id"), update_dict={"dedline": dedline})
+    await task_crud.update_item(_id=data.get("task_id"), update_dict={"dedline": dedline})
+    usr = await user_crud.get_item(_id=message.from_user.id)
 
     scheduler: AsyncIOScheduler = await bot_loader.get_scheduler()
     scheduler.add_job(
         remind_you_of_a_task,
-        DateTrigger(run_date=dedline, timezone="Europe/Moscow"),
+        DateTrigger(run_date=dedline, timezone=usr.time_zone),
         id=str(data.get("task_id")),
         args=(data.get("task_id"), message.from_user.id),
     )
@@ -46,7 +49,7 @@ async def add_dedline(message: Message, state: FSMContext):
 
 async def dedline_format(text: str):
     dedline_date, dedline_time = text.strip().split(" ")
-    dedline_date = dedline_date.replace(",", ".")
+    dedline_date = dedline_date.replace(",", ".").replace("/", ".")
     dedline_time = dedline_time.replace(".", ":").replace(",", ":")
 
     dedline = datetime.strptime(f"{dedline_date}.{datetime.now().year} {dedline_time}", "%d.%m.%Y %H:%M")

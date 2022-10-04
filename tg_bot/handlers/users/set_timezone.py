@@ -22,7 +22,7 @@ async def get_city_name(message: Message, state: FSMContext):
 
 async def process_set_timezone(message: Message, state: FSMContext):
     user_timezone = await get_timezone(message.text)
-    await crud.update_item(_id=message.from_user.id, update_dict={"time_zone": user_timezone})
+    await crud.update_item(user_id=message.from_user.id, update_dict={"time_zone": user_timezone})
     await state.finish()
     await message.answer("Часовой пояс установлен")
 

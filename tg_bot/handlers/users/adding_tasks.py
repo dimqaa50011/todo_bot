@@ -11,7 +11,6 @@ crud = TasksCRUD()
 
 
 async def add_new_task(message: Message, state: FSMContext):
-    print(message.location)
     await message.answer("Какую задачу нужно записать?")
     await state.set_state("new_task")
 
