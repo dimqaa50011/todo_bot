@@ -1,5 +1,8 @@
-from sqlalchemy import and_, select
+from typing import Optional
+
+from sqlalchemy import and_, select, text
 from sqlalchemy.engine.cursor import CursorResult
+from sqlalchemy.sql.selectable import Select
 
 from db_api.models.tasks import Tasks
 from db_api.schemas.tasks_chemas import CreateTask, TaskDetail
@@ -22,9 +25,27 @@ class TasksCRUD(BaseCRUD):
         result = answer.fetchone()
         return TaskDetail(id=result.id, body=result.body, dedline=result.dedline)
 
-    async def get_all_items(self, user_id: int):
-        query = select(self._model).where(and_(self._model.c.user_id == user_id, self._model.c.deleted == False))
+    async def get_all_items(
+        self, *, user_id: int, offset: Optional[int] = None, limit: int = 10, get_count: bool = False
+    ):
+        query: Select = (
+            select(self._model)
+            .where(and_(self._model.c.user_id == user_id, self._model.c.deleted == False))
+            .limit(limit)
+        )
+
+        if not offset is None:
+            query: Select = query.offset(offset)
+
         answer: CursorResult = await self.executer(query=query)
+
+        tasks_list = await self.__create_tasks_list(answer.fetchall())
+
+        if get_count:
+            count_query = select(text("COUNT(user_id)")).where(self._model.c.user_id == user_id)
+            result: CursorResult = await self.executer(query=count_query)
+
+            return (tasks_list, result.scalar())
 
         return await self.__create_tasks_list(answer.fetchall())
 
