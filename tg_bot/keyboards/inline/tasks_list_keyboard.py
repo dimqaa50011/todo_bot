@@ -22,7 +22,9 @@ async def get_task_list_markup(*, user_id: int, offset: Optional[int]):
         raise IndexError(f"Offset can`t be more then count_task, offset={offset} count_task={count_task}")
 
     async for task in one_task(all_user_tasks):
-        markup.insert(InlineKeyboardButton(text=task.body, callback_data=tasks_list_call.new(task_id=task.id)))
+        markup.insert(
+            InlineKeyboardButton(text=task.body, callback_data=tasks_list_call.new(task_id=task.id, task="task"))
+        )
 
     if count_task > 10:
         pager = await next_and_previous(offset)
