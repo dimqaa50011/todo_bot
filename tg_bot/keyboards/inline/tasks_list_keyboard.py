@@ -10,9 +10,16 @@ crud = TasksCRUD()
 
 
 async def get_task_list_markup(*, user_id: int, offset: Optional[int]):
+    markup = InlineKeyboardMarkup(row_width=1)
+
+    if not offset is None:
+        if offset < 0:
+            raise IndexError(f"Offset can`t be less than zero, offset={offset}")
+
     all_user_tasks, count_task = await crud.get_all_items(user_id=user_id, offset=offset, get_count=True)
 
-    markup = InlineKeyboardMarkup(row_width=1)
+    if not len(all_user_tasks):
+        raise IndexError(f"Offset can`t be more then count_task, offset={offset} count_task={count_task}")
 
     async for task in one_task(all_user_tasks):
         markup.insert(InlineKeyboardButton(text=task.body, callback_data=tasks_list_call.new(task_id=task.id)))
@@ -34,7 +41,11 @@ async def next_and_previous(offset: Optional[int]):
     if offset is None:
         offset = 0
 
-    button_next = InlineKeyboardButton(text="Далее >>", callback_data=paginator_call.new(next=1, offset=offset))
-    button_previous = InlineKeyboardButton(text="<< Назад", callback_data=paginator_call.new(next=-1, offset=offset))
+    button_next = InlineKeyboardButton(
+        text="Далее >>", callback_data=paginator_call.new(next="yes", offset=offset, pager="pager")
+    )
+    button_previous = InlineKeyboardButton(
+        text="<< Назад", callback_data=paginator_call.new(next="no", offset=offset, pager="pager")
+    )
 
     return (button_previous, button_next)

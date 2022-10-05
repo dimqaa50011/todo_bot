@@ -28,11 +28,14 @@ class TasksCRUD(BaseCRUD):
     async def get_all_items(
         self, *, user_id: int, offset: Optional[int] = None, limit: int = 10, get_count: bool = False
     ):
-        query: Select = select(self._model).where(
-            and_(self._model.c.user_id == user_id, self._model.c.deleted == False)
+        query: Select = (
+            select(self._model)
+            .where(and_(self._model.c.user_id == user_id, self._model.c.deleted == False))
+            .limit(limit)
         )
+
         if not offset is None:
-            query: Select = query.offset(offset).limit(limit)
+            query: Select = query.offset(offset)
 
         answer: CursorResult = await self.executer(query=query)
 
