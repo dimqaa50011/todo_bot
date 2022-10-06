@@ -25,7 +25,7 @@ async def without_notice(call: CallbackQuery, state: FSMContext):
 async def notification_adding_process(call: CallbackQuery, state: FSMContext):
     await call.answer()
     await call.message.edit_reply_markup()
-    await call.message.edit_text(text="Напиши дату и время для уведомления в формате dd.mm HH:MM")
+    await call.message.edit_text(text="Напиши дату и время для уведомления в формате дд.мм чч:мм")
     await state.set_state("add_date_time")
 
 

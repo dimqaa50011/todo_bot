@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from aiogram import Dispatcher
 from aiogram.dispatcher.storage import FSMContext
 from aiogram.types import CallbackQuery, Message
@@ -47,17 +49,51 @@ async def edit_body_or_dedline(call: CallbackQuery, state: FSMContext):
     await call.message.answer(msg, reply_markup=markup)
 
 
-async def edit_body_task(message: CallbackQuery | Message, state: FSMContext):
+async def edit_body_task(message: CallbackQuery | Message, state: FSMContext, callback_data: dict = None):
     if isinstance(message, CallbackQuery):
-        call = message
-        await state.set_state("new_body")
-        await call.answer()
-        await call.message.edit_text("Напиши новый текст задачи")
+        msg = "Напиши новый текст задачи"
+        await process_edit_task_callback(
+            message=message, state_name="new_body", state=state, answer=msg, callback_data=callback_data
+        )
+
     elif isinstance(message, Message):
-        data = await state.get_data()
-        await state.finish()
-        await crud.update_item(_id=data.get("task_id"), update_dict={"body": message.text})
-        await message.answer("Текст задачи обновлен")
+        await process_edit_task_message(message=message, state=state, answer="Текст задачи обновлен")
+
+
+async def edit_dedline_task(message: CallbackQuery | Message, state: FSMContext, callback_data: dict = None):
+    if isinstance(message, CallbackQuery):
+        msg = "Напиши дату и время для уведомления в формате дд.мм чч:мм"
+        await process_edit_task_callback(
+            message=message, state_name="new_dedline", state=state, answer=msg, callback_data=callback_data
+        )
+
+    elif isinstance(message, Message):
+        await process_edit_task_message(message=message, state=state, answer="Дедлайн обновлен")
+
+
+async def process_edit_task_callback(
+    *, message: CallbackQuery, state_name: str, state: FSMContext, answer: str, callback_data: dict
+):
+    call = message
+    async with state.proxy() as data:
+        data["field"] = callback_data.get("attr")
+    await state.set_state(state_name)
+    await call.answer()
+    await call.message.edit_text(answer)
+
+
+async def process_edit_task_message(*, message: Message, state: FSMContext, answer: str):
+    data = await state.get_data()
+
+    field = data.get("field")
+    value = message.text
+    match field:
+        case "dedline":
+            value = await dedline_format(message.text)
+
+    await state.finish()
+    await crud.update_item(_id=data.get("task_id"), update_dict={field: value})
+    await message.answer(answer)
 
 
 async def get_card_task(task_id: int):
@@ -69,9 +105,20 @@ async def get_card_task(task_id: int):
     return f"Дедлайн: {dedline}\n\nЗадача:\n{task.body}"
 
 
+async def dedline_format(text: str):
+    dedline_date, dedline_time = text.strip().split(" ")
+    dedline_date = dedline_date.replace(",", ".").replace("/", ".")
+    dedline_time = dedline_time.replace(".", ":").replace(",", ":")
+
+    dedline = datetime.strptime(f"{dedline_date}.{datetime.now().year} {dedline_time}", "%d.%m.%Y %H:%M")
+    return dedline
+
+
 def register_edit_task_handlers(dp: Dispatcher):
     dp.register_callback_query_handler(get_task_detail, tasks_list_call.filter(task="task"), state="tasks_list")
     dp.register_callback_query_handler(task_compliteb, edit_task_call.filter(attr="complited"), state="edit_task")
     dp.register_callback_query_handler(edit_body_or_dedline, edit_task_call.filter(attr="empty"), state="edit_task")
     dp.register_callback_query_handler(edit_body_task, edit_task_call.filter(attr="body"), state="choise_attr")
     dp.register_message_handler(edit_body_task, state="new_body")
+    dp.register_callback_query_handler(edit_dedline_task, edit_task_call.filter(attr="dedline"), state="choise_attr")
+    dp.register_message_handler(edit_dedline_task, state="new_dedline")
