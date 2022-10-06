@@ -30,7 +30,9 @@ class TasksCRUD(BaseCRUD):
     ):
         query: Select = (
             select(self._model)
-            .where(and_(self._model.c.user_id == user_id, self._model.c.deleted == False))
+            .where(
+                and_(self._model.c.user_id == user_id, self._model.c.deleted == False, self._model.c.complited == False)
+            )
             .limit(limit)
         )
 
@@ -42,7 +44,9 @@ class TasksCRUD(BaseCRUD):
         tasks_list = await self.__create_tasks_list(answer.fetchall())
 
         if get_count:
-            count_query = select(text("COUNT(user_id)")).where(self._model.c.user_id == user_id)
+            count_query = select(text("COUNT(user_id)")).where(
+                and_(self._model.c.user_id == user_id, self._model.c.deleted == False, self._model.c.complited == False)
+            )
             result: CursorResult = await self.executer(query=count_query)
 
             return (tasks_list, result.scalar())
