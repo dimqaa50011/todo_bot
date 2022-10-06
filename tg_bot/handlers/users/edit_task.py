@@ -1,11 +1,11 @@
 from aiogram import Dispatcher
 from aiogram.dispatcher.storage import FSMContext
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 
 from db_api.crud.tasks_crud import TasksCRUD
 from db_api.schemas.tasks_chemas import TaskDetail
 from tg_bot.keyboards.inline.callbackdatas import edit_task_call, tasks_list_call
-from tg_bot.keyboards.inline.edit_task_keyboard import get_edit_markup
+from tg_bot.keyboards.inline.edit_task_keyboard import get_body_and_dedline_markup, get_edit_markup
 
 crud = TasksCRUD()
 
@@ -37,13 +37,34 @@ async def task_compliteb(call: CallbackQuery, state: FSMContext):
     await state.finish()
 
 
+async def edit_body_or_dedline(call: CallbackQuery, state: FSMContext):
+    await call.answer()
+    await call.message.edit_reply_markup()
+    await state.set_state("choise_attr")
+
+    msg = "Что будем редактировать?"
+    markup = await get_body_and_dedline_markup()
+    await call.message.answer(msg, reply_markup=markup)
+
+
+async def edit_body_task(message: CallbackQuery | Message, state: FSMContext):
+    if isinstance(message, CallbackQuery):
+        call = message
+        await state.set_state("new_body")
+        await call.answer()
+        await call.message.edit_text("Напиши новый текст задачи")
+    elif isinstance(message, Message):
+        data = await state.get_data()
+        await state.finish()
+        await crud.update_item(_id=data.get("task_id"), update_dict={"body": message.text})
+        await message.answer("Текст задачи обновлен")
+
+
 async def get_card_task(task_id: int):
     task: TaskDetail = await crud.get_item(_id=task_id)
-
+    dedline = task.dedline
     if task.dedline is None:
         dedline = "Не назначен"
-
-    dedline = task.dedline
 
     return f"Дедлайн: {dedline}\n\nЗадача:\n{task.body}"
 
@@ -51,3 +72,6 @@ async def get_card_task(task_id: int):
 def register_edit_task_handlers(dp: Dispatcher):
     dp.register_callback_query_handler(get_task_detail, tasks_list_call.filter(task="task"), state="tasks_list")
     dp.register_callback_query_handler(task_compliteb, edit_task_call.filter(attr="complited"), state="edit_task")
+    dp.register_callback_query_handler(edit_body_or_dedline, edit_task_call.filter(attr="empty"), state="edit_task")
+    dp.register_callback_query_handler(edit_body_task, edit_task_call.filter(attr="body"), state="choise_attr")
+    dp.register_message_handler(edit_body_task, state="new_body")
