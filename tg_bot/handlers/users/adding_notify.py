@@ -1,16 +1,14 @@
-from datetime import datetime
-
 from aiogram import Dispatcher
 from aiogram.dispatcher.storage import FSMContext
 from aiogram.types import CallbackQuery, Message
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.date import DateTrigger
+from loguru import logger
 
-from core import bot_loader
 from db_api.crud.tasks_crud import TasksCRUD
 from db_api.crud.users_crud import UsersCRUD
+from db_api.schemas.scheduler_schemas import SchrdulerSchema
+from tg_bot.dependecies.formatters import CustomFormatters
+from tg_bot.dependecies.scheduler import SetNotify, create_notify_setter
 from tg_bot.keyboards.inline.callbackdatas import notify_callback
-from tg_bot.misc.scheduler import remind_you_of_a_task
 
 task_crud = TasksCRUD()
 user_crud = UsersCRUD()
@@ -30,30 +28,27 @@ async def notification_adding_process(call: CallbackQuery, state: FSMContext):
 
 
 async def add_dedline(message: Message, state: FSMContext):
+    notify_setter: SetNotify = await create_notify_setter()
     data = await state.get_data()
-    dedline = await dedline_format(message.text)
-    await task_crud.update_item(_id=data.get("task_id"), update_dict={"dedline": dedline})
-    usr = await user_crud.get_item(_id=message.from_user.id)
 
-    scheduler: AsyncIOScheduler = await bot_loader.get_scheduler()
-    scheduler.add_job(
-        remind_you_of_a_task,
-        DateTrigger(run_date=dedline, timezone=usr.time_zone),
-        id=str(data.get("task_id")),
-        args=(data.get("task_id"), message.from_user.id),
+    try:
+        dedline = await CustomFormatters.dedline_format(message.text)
+    except ValueError as ex:
+        logger.warning(ex)
+        await message.answer("Неверный формат даты или времени. Попробуй снова.")
+        return
+
+    await task_crud.update_item(_id=data.get("task_id"), update_dict={"dedline": dedline})
+
+    await notify_setter.set_notice(
+        SchrdulerSchema(task_id=data.get("task_id"), user_id=message.from_user.id, dedline=dedline)
     )
+    # await SetNotify.set_notice(
+    #     SchrdulerSchema(task_id=data.get("task_id"), user_id=message.from_user.id, dedline=dedline)
+    # )
 
     await message.answer("Уведомления включены")
     await state.finish()
-
-
-async def dedline_format(text: str):
-    dedline_date, dedline_time = text.strip().split(" ")
-    dedline_date = dedline_date.replace(",", ".").replace("/", ".")
-    dedline_time = dedline_time.replace(".", ":").replace(",", ":")
-
-    dedline = datetime.strptime(f"{dedline_date}.{datetime.now().year} {dedline_time}", "%d.%m.%Y %H:%M")
-    return dedline
 
 
 def register_adding_notify_handlers(dp: Dispatcher):

@@ -1,21 +1,16 @@
-from datetime import datetime
-
 from aiogram import Dispatcher
 from aiogram.dispatcher.storage import FSMContext
 from aiogram.types import CallbackQuery, Message
-from apscheduler.jobstores.base import JobLookupError
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.date import DateTrigger
 from loguru import logger
 
-from core import bot_loader
 from db_api.crud.tasks_crud import TasksCRUD
 from db_api.crud.users_crud import UsersCRUD
-from db_api.schemas.tasks_chemas import TaskDetail
+from db_api.schemas.scheduler_schemas import SchrdulerSchema
+from tg_bot.dependecies.formatters import CustomFormatters
+from tg_bot.dependecies.scheduler import SetNotify, create_notify_setter
 from tg_bot.keyboards.inline.callbackdatas import edit_task_call, tasks_list_call
 from tg_bot.keyboards.inline.edit_task_keyboard import get_body_and_dedline_markup, get_edit_markup
 from tg_bot.keyboards.reply.main_menu import get_main_menu
-from tg_bot.misc.scheduler import remind_you_of_a_task
 
 crud_task = TasksCRUD()
 crud_user = UsersCRUD()
@@ -32,7 +27,7 @@ async def get_task_detail(call: CallbackQuery, state: FSMContext, callback_data:
 
     await state.set_state("edit_task")
 
-    card = await get_card_task(task_id)
+    card = await CustomFormatters.get_card_task(task_id)
 
     await call.message.edit_text(card)
     await call.message.edit_reply_markup(markup)
@@ -92,6 +87,7 @@ async def process_edit_task_callback(
 
 
 async def process_edit_task_message(*, message: Message, state: FSMContext, answer: str):
+    notify_setter: SetNotify = await create_notify_setter()
     data = await state.get_data()
 
     markup = await get_main_menu()
@@ -99,46 +95,20 @@ async def process_edit_task_message(*, message: Message, state: FSMContext, answ
     value = message.text
     match field:
         case "dedline":
-            value = await dedline_format(message.text)
-            await edit_notify(task_id=data.get("task_id"), user_id=message.from_user.id, dedline=value)
+            try:
+                value = await CustomFormatters.dedline_format(message.text)
+            except ValueError as ex:
+                await message.answer("Неверный формат даты или времени. Попробуй снова.")
+                logger.warning(ex)
+                return
+
+            await notify_setter.edit_notify(
+                SchrdulerSchema(task_id=data.get("task_id"), user_id=message.from_user.id, dedline=value)
+            )
 
     await state.finish()
     await crud_task.update_item(_id=data.get("task_id"), update_dict={field: value})
     await message.answer(answer, reply_markup=markup)
-
-
-async def get_card_task(task_id: int):
-    task: TaskDetail = await crud_task.get_item(_id=task_id)
-    dedline = task.dedline
-    if task.dedline is None:
-        dedline = "Не назначен"
-
-    return f"Дедлайн: {dedline}\n\nЗадача:\n{task.body}"
-
-
-async def dedline_format(text: str):  # FIXME
-    dedline_date, dedline_time = text.strip().split(" ")
-    dedline_date = dedline_date.replace(",", ".").replace("/", ".")
-    dedline_time = dedline_time.replace(".", ":").replace(",", ":")
-
-    dedline = datetime.strptime(f"{dedline_date}.{datetime.now().year} {dedline_time}", "%d.%m.%Y %H:%M")
-    return dedline
-
-
-async def edit_notify(*, task_id: int, user_id: int, dedline: datetime):
-    user = await crud_user.get_item(_id=user_id)
-    scheduler: AsyncIOScheduler = await bot_loader.get_scheduler()
-    try:
-        scheduler.remove_job(job_id=task_id)
-    except JobLookupError as ex:
-        logger.warning(ex)
-    finally:
-        scheduler.add_job(
-            remind_you_of_a_task,
-            DateTrigger(run_date=dedline, timezone=user.time_zone),
-            id=str(task_id),
-            args=(task_id, user_id),
-        )
 
 
 def register_edit_task_handlers(dp: Dispatcher):

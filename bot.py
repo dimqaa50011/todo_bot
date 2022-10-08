@@ -1,4 +1,5 @@
 import asyncio
+import locale
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
@@ -11,6 +12,8 @@ from tg_bot.misc.bot_commands import set_default_commands
 
 
 async def runner():
+    locale.setlocale(locale.LC_ALL, "")
+
     bot, dp, storage, admins = await bot_loader.get_all_attrs()
     scheduler: AsyncIOScheduler = await bot_loader.get_scheduler()
     scheduler.start()
