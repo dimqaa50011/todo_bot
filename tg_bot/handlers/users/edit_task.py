@@ -6,7 +6,6 @@ from loguru import logger
 from db_api.crud.tasks_crud import TasksCRUD
 from db_api.crud.users_crud import UsersCRUD
 from db_api.schemas.scheduler_schemas import SchrdulerSchema
-from db_api.schemas.tasks_chemas import TaskDetail
 from tg_bot.dependecies.formatters import CustomFormatters
 from tg_bot.dependecies.scheduler import SetNotify, create_notify_setter
 from tg_bot.keyboards.inline.callbackdatas import edit_task_call, tasks_list_call
@@ -28,7 +27,7 @@ async def get_task_detail(call: CallbackQuery, state: FSMContext, callback_data:
 
     await state.set_state("edit_task")
 
-    card = await get_card_task(task_id)
+    card = await CustomFormatters.get_card_task(task_id)
 
     await call.message.edit_text(card)
     await call.message.edit_reply_markup(markup)
@@ -110,15 +109,6 @@ async def process_edit_task_message(*, message: Message, state: FSMContext, answ
     await state.finish()
     await crud_task.update_item(_id=data.get("task_id"), update_dict={field: value})
     await message.answer(answer, reply_markup=markup)
-
-
-async def get_card_task(task_id: int):
-    task: TaskDetail = await crud_task.get_item(_id=task_id)
-    dedline = task.dedline
-    if task.dedline is None:
-        dedline = "Не назначен"
-
-    return f"Дедлайн: {dedline}\n\nЗадача:\n{task.body}"
 
 
 def register_edit_task_handlers(dp: Dispatcher):

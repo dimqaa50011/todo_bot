@@ -11,6 +11,7 @@ crud = TasksCRUD()
 
 
 async def add_new_task(message: Message, state: FSMContext):
+    await state.finish()
     await message.answer("Какую задачу нужно записать?")
     await state.set_state("new_task")
 
@@ -27,5 +28,5 @@ async def body_task(message: Message, state: FSMContext):
 
 
 def register_adding_tasks_handlers(dp: Dispatcher):
-    dp.register_message_handler(add_new_task, Text("Добавить задачу"))
+    dp.register_message_handler(add_new_task, Text("Добавить задачу"), state="*")
     dp.register_message_handler(body_task, state="new_task")
