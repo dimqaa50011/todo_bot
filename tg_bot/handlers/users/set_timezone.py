@@ -9,6 +9,7 @@ crud = UsersCRUD()
 
 
 async def get_city_name(message: Message, state: FSMContext):
+    await state.finish()
     await state.set_state("city_name")
     await message.answer("Напиши название города, в котором сейчас находишься")
 
@@ -21,5 +22,5 @@ async def process_set_timezone(message: Message, state: FSMContext):
 
 
 def register_set_timezone_handlers(dp: Dispatcher):
-    dp.register_message_handler(get_city_name, commands=["set_timezone"])
+    dp.register_message_handler(get_city_name, commands=["set_timezone"], state="*")
     dp.register_message_handler(process_set_timezone, state="city_name")
