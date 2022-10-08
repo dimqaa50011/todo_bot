@@ -6,7 +6,7 @@ from sqlalchemy.sql.schema import Table
 
 from core import bot_loader
 from db_api.models.users import Users
-from db_api.schemas.users_schemas import CreateUser
+from db_api.schemas.users_schemas import CreateUser, UserItem
 
 from .base_crud import BaseCRUD
 
@@ -25,8 +25,15 @@ class UsersCRUD(BaseCRUD):
     async def get_item(self, _id: int):
         query = select(self._model).where(self._model.c.id == _id)
         answer: CursorResult = await self.executer(query=query)
+        result = answer.fetchone()
 
-        return answer.fetchone()
+        return UserItem(
+            username=result.username,
+            first_name=result.first_name,
+            last_name=result.last_name,
+            is_admin=result.is_admin,
+            time_zone=result.time_zone,
+        )
 
     async def get_all_items(self, _id: int):
         if _id in await bot_loader.get_admins():

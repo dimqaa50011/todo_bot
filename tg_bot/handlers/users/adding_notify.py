@@ -1,16 +1,14 @@
 from aiogram import Dispatcher
 from aiogram.dispatcher.storage import FSMContext
 from aiogram.types import CallbackQuery, Message
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.date import DateTrigger
 from loguru import logger
 
-from core import bot_loader
 from db_api.crud.tasks_crud import TasksCRUD
 from db_api.crud.users_crud import UsersCRUD
+from db_api.schemas.scheduler_schemas import SchrdulerSchema
 from tg_bot.dependecies.formatters import CustomFormatters
+from tg_bot.dependecies.scheduler import SetNotify
 from tg_bot.keyboards.inline.callbackdatas import notify_callback
-from tg_bot.misc.scheduler import remind_you_of_a_task
 
 task_crud = TasksCRUD()
 user_crud = UsersCRUD()
@@ -40,14 +38,9 @@ async def add_dedline(message: Message, state: FSMContext):
         return
 
     await task_crud.update_item(_id=data.get("task_id"), update_dict={"dedline": dedline})
-    user = await user_crud.get_item(_id=message.from_user.id)
 
-    scheduler: AsyncIOScheduler = await bot_loader.get_scheduler()
-    scheduler.add_job(
-        remind_you_of_a_task,
-        DateTrigger(run_date=dedline, timezone=user.time_zone),
-        id=str(data.get("task_id")),
-        args=(data.get("task_id"), message.from_user.id),
+    await SetNotify.set_notice(
+        SchrdulerSchema(task_id=data.get("task_id"), user_id=message.from_user.id, dedline=dedline)
     )
 
     await message.answer("Уведомления включены")
