@@ -7,7 +7,7 @@ from db_api.crud.tasks_crud import TasksCRUD
 from db_api.crud.users_crud import UsersCRUD
 from db_api.schemas.scheduler_schemas import SchrdulerSchema
 from tg_bot.dependecies.formatters import CustomFormatters
-from tg_bot.dependecies.scheduler import SetNotify
+from tg_bot.dependecies.scheduler import SetNotify, create_notify_setter
 from tg_bot.keyboards.inline.callbackdatas import notify_callback
 
 task_crud = TasksCRUD()
@@ -28,6 +28,7 @@ async def notification_adding_process(call: CallbackQuery, state: FSMContext):
 
 
 async def add_dedline(message: Message, state: FSMContext):
+    notify_setter: SetNotify = await create_notify_setter()
     data = await state.get_data()
 
     try:
@@ -39,9 +40,12 @@ async def add_dedline(message: Message, state: FSMContext):
 
     await task_crud.update_item(_id=data.get("task_id"), update_dict={"dedline": dedline})
 
-    await SetNotify.set_notice(
+    await notify_setter.set_notice(
         SchrdulerSchema(task_id=data.get("task_id"), user_id=message.from_user.id, dedline=dedline)
     )
+    # await SetNotify.set_notice(
+    #     SchrdulerSchema(task_id=data.get("task_id"), user_id=message.from_user.id, dedline=dedline)
+    # )
 
     await message.answer("Уведомления включены")
     await state.finish()
