@@ -33,6 +33,7 @@ class TasksCRUD(BaseCRUD):
             .where(
                 and_(self._model.c.user_id == user_id, self._model.c.deleted == False, self._model.c.complited == False)
             )
+            .order_by("body")
             .limit(limit)
         )
 

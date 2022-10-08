@@ -1,6 +1,7 @@
 from .adding_notify import register_adding_notify_handlers
 from .adding_tasks import register_adding_tasks_handlers
 from .admin import register_admin_hanlers
+from .cancel_and_back import register_cancel_and_back_handlers
 from .echo import register_echo_handler
 from .edit_task import register_edit_task_handlers
 from .set_timezone import register_set_timezone_handlers
@@ -16,4 +17,5 @@ __all__ = [
     "register_set_timezone_handlers",
     "register_tasks_list_handlers",
     "register_edit_task_handlers",
+    "register_cancel_and_back_handlers",
 ]
