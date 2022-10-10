@@ -22,7 +22,7 @@ class Loader:
             jobstores=self.__default_jobstorage_scheduler, timezone=str(get_localzone())
         )
 
-    def get_dispatcher(self):
+    async def get_dispatcher(self):
         return self.__dp
 
     def get_fsm_storage(self):

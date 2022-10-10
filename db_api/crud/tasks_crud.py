@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import and_, select, text
+from sqlalchemy import and_, desc, select, text
 from sqlalchemy.engine.cursor import CursorResult
 from sqlalchemy.sql.selectable import Select
 
@@ -33,6 +33,7 @@ class TasksCRUD(BaseCRUD):
             .where(
                 and_(self._model.c.user_id == user_id, self._model.c.deleted == False, self._model.c.complited == False)
             )
+            .order_by(and_(desc("id")), desc("dedline"))
             .limit(limit)
         )
 
