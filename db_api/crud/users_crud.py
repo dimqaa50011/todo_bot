@@ -1,7 +1,5 @@
-from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.engine.cursor import CursorResult
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.schema import Table
 
 from core import bot_loader
@@ -16,11 +14,7 @@ class UsersCRUD(BaseCRUD):
 
     async def create_item(self, fields: CreateUser):
         query = self._model.insert()
-
-        try:
-            await self.executer(query=query, values=fields.dict())
-        except IntegrityError as ex:
-            logger.info(ex)
+        await self.executer(query=query, values=fields.dict())
 
     async def get_item(self, _id: int):
         query = select(self._model).where(self._model.c.id == _id)

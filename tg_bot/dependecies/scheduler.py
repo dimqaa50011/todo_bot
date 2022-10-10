@@ -30,12 +30,14 @@ class SetNotify:
         )
 
     async def edit_notify(self, scheduler_data: SchrdulerSchema):
+        await self.remove_notify(task_id=scheduler_data.task_id)
+        await self.set_notice(scheduler_data=scheduler_data)
+
+    async def remove_notify(self, task_id: str):
         try:
-            self.scheduler.remove_job(job_id=scheduler_data.task_id)
+            self.scheduler.remove_job(task_id)
         except JobLookupError as ex:
             logger.warning(ex)
-        finally:
-            await self.set_notice(scheduler_data=scheduler_data)
 
     async def _get_timezone(self, user_id: int):
         user: UserItem = await self.crud_user.get_item(_id=user_id)

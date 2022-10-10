@@ -9,8 +9,7 @@ def start_register_all_handlers(dp: Dispatcher):
     register_adding_tasks_handlers(dp)
     register_adding_notify_handlers(dp)
     register_set_timezone_handlers(dp)
-    register_tasks_list_handlers(dp)
-    register_edit_task_handlers(dp)
+    register_my_tasks_handlers(dp)
     register_cancel_and_back_handlers(dp)
 
     register_echo_handler(dp)  # Эхо регистрировать самым последним

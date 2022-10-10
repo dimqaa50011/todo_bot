@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from loguru import logger
+
 from db_api.crud.tasks_crud import TasksCRUD
 from db_api.schemas.tasks_chemas import TaskDetail
 
@@ -9,6 +11,7 @@ class CustomFormatters:
 
     @staticmethod
     async def dedline_format(text: str):
+        logger.debug(text)
         dedline_date, dedline_time = text.strip().split(" ")
         dedline_date = dedline_date.replace(",", ".").replace("/", ".")
         dedline_time = dedline_time.replace(".", ":").replace(",", ":")

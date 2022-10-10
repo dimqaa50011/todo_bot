@@ -21,3 +21,15 @@ class TaskDetail(BaseTaskSchema):
 
 class TaskList(BaseTaskSchema):
     items: list[TaskDetail]
+
+
+class BaseTaskCallback(BaseModel):
+    task_id: str = Field(default="0")
+    user_id: str = Field(default="0")
+    offset: str = Field(default="0")
+    field: str = Field(default="0")
+    action: str = Field(default="0")
+
+
+class TaskCallback(BaseTaskCallback):
+    level: str
