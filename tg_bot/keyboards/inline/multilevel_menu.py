@@ -7,7 +7,6 @@ from db_api.crud.tasks_crud import TasksCRUD
 from db_api.schemas.tasks_chemas import TaskCallback, TaskDetail
 
 from .callbackdatas import paginator_call
-from .cancel_and_back_keyboards import get_cancel_button
 
 crud = TasksCRUD()
 task_call = CallbackData("tasks", "level", "user_id", "task_id", "offset", "field", "action")
@@ -79,16 +78,19 @@ async def task_detail(task_id: int, user_id: int):
     return markup
 
 
-async def get_back_markup(task_id: int, user_id: int):
+async def get_back_markup(task_id: int, user_id: int, button_text: str | None = None):
     CURRENT_LEVEL = 2
     markup = InlineKeyboardMarkup()
-    cancel_button = await get_cancel_button()
 
     back_callback = await make_task_callback_data(
         TaskCallback(level=CURRENT_LEVEL - 1, user_id=user_id, task_id=task_id)
     )
 
-    markup.row(InlineKeyboardButton(text="Назад", callback_data=back_callback), cancel_button)
+    text = "Назад"
+    if not button_text is None and isinstance(button_text, str):
+        text = button_text
+
+    markup.row(InlineKeyboardButton(text=text, callback_data=back_callback))
 
     return markup
 

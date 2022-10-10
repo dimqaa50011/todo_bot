@@ -13,7 +13,6 @@ from tg_bot.dependecies.formatters import CustomFormatters
 from tg_bot.dependecies.scheduler import SetNotify, create_notify_setter
 from tg_bot.keyboards.inline.callbackdatas import paginator_call
 from tg_bot.keyboards.inline.multilevel_menu import get_back_markup, list_tasks, task_call, task_detail
-from tg_bot.keyboards.reply.main_menu import get_main_menu
 
 crud_task = TasksCRUD()
 
@@ -66,8 +65,8 @@ async def edit_body_task(message: CallbackQuery | Message, state: FSMContext, ca
         )
 
     elif isinstance(message, Message):
-        await process_update_task(state=state, new_value=message.text)
-        markup = await get_main_menu()
+        markup = await process_update_task(state=state, new_value=message.text)
+        # markup = await get_main_menu()
         await message.answer("Задача обновлена", reply_markup=markup)
 
 
@@ -88,7 +87,8 @@ async def edit_dedline_task(
         except ValueError as ex:
             logger.warning(ex)
             await message.answer(
-                "Неверный формат даты или времени. Попробуй снова.\nНапиши дату и время для уведомления в формате дд.мм чч:мм"
+                "Неверный формат даты или времени. Попробуй снова.\n\
+                Напиши дату и время для уведомления в формате дд.мм чч:мм"
             )
             return
 
@@ -98,8 +98,8 @@ async def edit_dedline_task(
             SchrdulerSchema(task_id=data.get("task_id"), user_id=data.get("user_id"), dedline=dedline)
         )
 
-        await process_update_task(state=state, new_value=dedline)
-        markup = await get_main_menu()
+        markup = await process_update_task(state=state, new_value=dedline)
+        # markup = await get_main_menu()
         await message.answer("Дедлайн задачи обновлен", reply_markup=markup)
 
 
@@ -120,8 +120,13 @@ async def process_callback_query(
 
 async def process_update_task(*, state: FSMContext, new_value: str | datetime):
     data = await state.get_data()
+    markup = await get_back_markup(
+        task_id=data.get("task_id"), user_id=data.get("user_id"), button_text="Вернуться к задаче"
+    )
     await crud_task.update_item(_id=data.get("task_id"), update_dict={data.get("field"): new_value})
     await state.finish()
+
+    return markup
 
 
 async def next_or_previous_task_list(call: CallbackQuery, callback_data: dict):
